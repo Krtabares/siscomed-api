@@ -1,24 +1,34 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Schema, Document } from 'mongoose';
 
-export type UserDocument = User & Document;
-
-@Schema()
-export class User {
-  @Prop({ required: true })
-  name: string;
-
-  @Prop({ required: true, unique: true })
-  email: string;
-
-  @Prop({ required: true })
-  password: string;
-
-  @Prop({ enum: ['admin', 'profesor', 'niño', 'personal'], default: 'niño' })
-  role: string;
-
-  @Prop({ type: String, ref: 'User', required: false })
-  representativeId?: string;
+export enum TipoUsuario {
+  Admin = 'Admin',
+  Niño = 'Niño',
+  Profesor = 'Profesor',
+  Personal = 'Personal',
 }
 
-export const UserSchema = SchemaFactory.createForClass(User);
+export interface User {
+  nombre: string;
+  tipoUsuario: TipoUsuario;
+  codigoQR: string;
+  activo: boolean;
+  representante?: string | null;  // Solo para niños, relación con el representante
+  password: string ;  // Agregar la propiedad 'password'
+  email: string;
+  telefono?: string;
+  direccion?: string;
+}
+
+export interface UserDocument extends User, Document {}
+
+export const UserSchema = new Schema<UserDocument>({
+  nombre: { type: String, required: true },
+  tipoUsuario: { type: String, enum: TipoUsuario, required: true },
+  codigoQR: { type: String, required: true },
+  activo: { type: Boolean, default: true },
+  representante: { type: Schema.Types.ObjectId, ref: 'User' },
+  password: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  telefono: { type: String },
+  direccion: { type: String },
+});
